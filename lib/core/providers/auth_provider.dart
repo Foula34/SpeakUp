@@ -1,0 +1,1 @@
+// Gère l'état d'authentification (utilisateur connecté ou non).

@@ -1,0 +1,1 @@
+// Logique de connexion, inscription, déconnexion (couche au-dessus de supabase_provider).
