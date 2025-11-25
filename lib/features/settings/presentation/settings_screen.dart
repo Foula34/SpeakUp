@@ -1,0 +1,1 @@
+// Écran 12 (Paramètres)

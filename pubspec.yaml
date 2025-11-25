@@ -34,12 +34,34 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
-  supabase: ^2.10.0
-  camera: ^0.11.3
-  path_provider: ^2.1.5
-  provider: ^6.1.5+1
-  uuid: ^4.5.2
-  flutter_secure_storage: ^9.2.4
+  
+  # Backend & Auth
+  supabase_flutter: ^2.10.0  # Client Supabase pour Flutter (Auth + Database + Storage)
+  
+  # State Management
+  flutter_riverpod: ^2.6.1    # Gestion de l'état de l'application
+  riverpod_annotation: ^2.6.1 # Annotations pour Riverpod
+  
+  # Navigation
+  go_router: ^14.7.0          # Navigation entre écrans
+  
+  # Media (Audio/Video)
+  camera: ^0.11.3             # Capture vidéo
+  record: ^5.1.2              # Enregistrement audio
+  audioplayers: ^6.1.0        # Lecture audio (pour les ambiances)
+  video_player: ^2.9.2        # Lecture vidéo
+  ffmpeg_kit_flutter: ^6.0.3  # Compression vidéo
+  image_picker: ^1.1.2        # Sélectionner images/vidéos
+  
+  # Utils
+  path_provider: ^2.1.5       # Accès aux dossiers système
+  uuid: ^4.5.2                # Génération d'identifiants uniques
+  flutter_secure_storage: ^9.2.4  # Stockage sécurisé des tokens
+  intl: ^0.19.0               # Formatage dates/nombres
+  
+  # UI
+  shimmer: ^3.0.0             # Effet de chargement
+  cached_network_image: ^3.4.1  # Cache des images du réseau
 
 dev_dependencies:
   flutter_test:
@@ -51,6 +73,10 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^5.0.0
+  
+  # Code Generation (pour Riverpod)
+  build_runner: ^2.4.13       # Outil pour générer du code
+  riverpod_generator: ^2.6.1  # Générateur pour Riverpod
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -64,9 +90,10 @@ flutter:
   uses-material-design: true
 
   # To add assets to your application, add an assets section, like this:
-  # assets:
-  #   - images/a_dot_burr.jpeg
-  #   - images/a_dot_ham.jpeg
+  assets:
+    - assets/images/
+    - assets/icons/
+    - assets/ambiance_sounds/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
@@ -74,22 +101,15 @@ flutter:
   # For details regarding adding assets from package dependencies, see
   # https://flutter.dev/to/asset-from-package
 
-  # To add custom fonts to your application, add a fonts section here,
-  # in this "flutter" section. Each entry in this list should have a
-  # "family" key with the font family name, and a "fonts" key with a
-  # list giving the asset and other descriptors for the font. For
-  # example:
-  # fonts:
-  #   - family: Schyler
-  #     fonts:
-  #       - asset: fonts/Schyler-Regular.ttf
-  #       - asset: fonts/Schyler-Italic.ttf
-  #         style: italic
-  #   - family: Trajan Pro
-  #     fonts:
-  #       - asset: fonts/TrajanPro.ttf
-  #       - asset: fonts/TrajanPro_Bold.ttf
-  #         weight: 700
-  #
-  # For details regarding fonts from package dependencies,
-  # see https://flutter.dev/to/font-from-package
+  # Polices personnalisées
+  fonts:
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Inter-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Inter-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Inter-Bold.ttf
+          weight: 700

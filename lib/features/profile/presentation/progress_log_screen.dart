@@ -1,0 +1,1 @@
+// Écran 5 (Journal de Progrès)

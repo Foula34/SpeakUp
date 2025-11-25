@@ -1,0 +1,1 @@
+// Fournit l'instance du client Supabase.
