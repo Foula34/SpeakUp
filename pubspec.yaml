@@ -62,6 +62,7 @@ dependencies:
   # UI
   shimmer: ^3.0.0             # Effet de chargement
   cached_network_image: ^3.4.1  # Cache des images du réseau
+  iconify_flutter: ^0.0.5     # Icônes vectorielles (Google, etc.)
 
 dev_dependencies:
   flutter_test:
@@ -102,14 +103,14 @@ flutter:
   # https://flutter.dev/to/asset-from-package
 
   # Polices personnalisées
-  fonts:
-    - family: Inter
-      fonts:
-        - asset: assets/fonts/Inter-Regular.ttf
-          weight: 400
-        - asset: assets/fonts/Inter-Medium.ttf
-          weight: 500
-        - asset: assets/fonts/Inter-SemiBold.ttf
-          weight: 600
-        - asset: assets/fonts/Inter-Bold.ttf
-          weight: 700
+  # fonts:
+  #   - family: Inter
+  #     fonts:
+  #       - asset: assets/fonts/Inter-Regular.ttf
+  #         weight: 400
+  #       - asset: assets/fonts/Inter-Medium.ttf
+  #         weight: 500
+  #       - asset: assets/fonts/Inter-SemiBold.ttf
+  #         weight: 600
+  #       - asset: assets/fonts/Inter-Bold.ttf
+  #         weight: 700
