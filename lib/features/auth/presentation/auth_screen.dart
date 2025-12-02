@@ -1,21 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:speakup_mvp/core/providers/auth_provider.dart';
 import '../../../common/constants/app_colors.dart';
+import '../../../common/constants/app_routes.dart';
 import '../../../common/widgets/primary_button.dart';
 
-/// Écran 1 : Authentification (Connexion / Inscription)
-///
-/// Cet écran permet à l'utilisateur de :
-/// - Se connecter avec email/mot de passe
-/// - S'inscrire (créer un compte)
-/// - Réinitialiser son mot de passe (TODO: à implémenter)
-///
-/// TODO SUPABASE (pour ton collègue) :
-/// - Implémenter la connexion avec Supabase Auth: supabase.auth.signInWithPassword()
-/// - Implémenter l'inscription avec Supabase Auth: supabase.auth.signUp()
-/// - Gérer les erreurs d'authentification
-/// - Rediriger vers HomeScreen après connexion réussie
+/// Écran d'authentification (Connexion / Inscription)
+
 class AuthScreen extends ConsumerStatefulWidget {
   const AuthScreen({super.key});
 
@@ -24,26 +16,17 @@ class AuthScreen extends ConsumerStatefulWidget {
 }
 
 class _AuthScreenState extends ConsumerState<AuthScreen> {
-  // Contrôle si on affiche l'écran de connexion (true) ou d'inscription (false)
   bool _isLoginMode = true;
 
-  // Contrôleurs pour récupérer le texte des champs
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _nameController =
-      TextEditingController(); // Uniquement pour l'inscription
-  final _confirmPasswordController =
-      TextEditingController(); // Confirmation (inscription)
+  final _nameController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
 
-  // Clé pour valider le formulaire
   final _formKey = GlobalKey<FormState>();
-
-  // État de chargement (pendant l'authentification)
-  bool _isLoading = false;
 
   @override
   void dispose() {
-    // Nettoyer les contrôleurs quand l'écran est détruit
     _emailController.dispose();
     _passwordController.dispose();
     _nameController.dispose();
@@ -51,110 +34,77 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     super.dispose();
   }
 
-  /// Fonction appelée lors de la soumission du formulaire
-  ///
-  /// TODO SUPABASE : Remplacer la logique fictive par les appels Supabase
+  /// Soumettre le formulaire (connexion ou inscription)
   Future<void> _handleSubmit() async {
     // Valider le formulaire
     if (!_formKey.currentState!.validate()) {
       return;
     }
 
-    setState(() {
-      _isLoading = true;
-    });
+    // Effacer les erreurs précédentes
+    ref.read(authProvider.notifier).clearError();
+
+    final authNotifier = ref.read(authProvider.notifier);
 
     try {
-      // TODO SUPABASE : Implémenter l'authentification réelle
       if (_isLoginMode) {
-        // ==================== CONNEXION ====================
-        // Code à implémenter :
-        // final response = await Supabase.instance.client.auth.signInWithPassword(
-        //   email: _emailController.text.trim(),
-        //   password: _passwordController.text,
-        // );
-        //
-        // if (response.user != null) {
-        //   // Rediriger vers HomeScreen
-        //   if (mounted) {
-        //     context.go(AppRoutes.home);
-        //   }
-        // }
-
-        // Simulation temporaire (2 secondes)
-        await Future.delayed(const Duration(seconds: 2));
-
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('✅ Connexion simulée réussie')),
-          );
-          // TODO: Rediriger vers HomeScreen après intégration Supabase
-          // context.go(AppRoutes.home);
-        }
+        // ========== CONNEXION ==========
+        await authNotifier.signIn(
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+        );
       } else {
-        // ==================== INSCRIPTION ====================
+        // ========== INSCRIPTION ==========
         // Vérifier que les mots de passe correspondent
         if (_passwordController.text != _confirmPasswordController.text) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
                 content: Text('Les mots de passe ne correspondent pas'),
+                backgroundColor: AppColors.error,
               ),
             );
           }
-          setState(() {
-            _isLoading = false;
-          });
           return;
         }
-        // Code à implémenter :
-        // final response = await Supabase.instance.client.auth.signUp(
-        //   email: _emailController.text.trim(),
-        //   password: _passwordController.text,
-        //   data: {'name': _nameController.text.trim()},
-        // );
-        //
-        // if (response.user != null) {
-        //   // Créer le profil utilisateur dans la table 'users'
-        //   await Supabase.instance.client.from('users').insert({
-        //     'id': response.user!.id,
-        //     'name': _nameController.text.trim(),
-        //     'email': _emailController.text.trim(),
-        //   });
-        //
-        //   // Rediriger vers HomeScreen
-        //   if (mounted) {
-        //     context.go(AppRoutes.home);
-        //   }
-        // }
 
-        // Simulation temporaire
-        await Future.delayed(const Duration(seconds: 2));
-
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('✅ Inscription simulée réussie')),
-          );
-        }
+        await authNotifier.signUp(
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+          name: _nameController.text.trim(),
+        );
       }
+
+      // La redirection se fera automatiquement via le router
+      // grâce au redirect dans app.dart
     } catch (e) {
-      // TODO SUPABASE : Gérer les erreurs Supabase (email déjà utilisé, mot de passe faible, etc.)
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('❌ Erreur : ${e.toString()}')));
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      // Les erreurs sont gérées par le provider
+      // Elles s'afficheront via le listener ci-dessous
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    // Écouter l'état d'authentification
+    final authState = ref.watch(authProvider);
+
+    // Afficher les erreurs via SnackBar
+    ref.listen<AuthState>(authProvider, (previous, next) {
+      if (next.error != null && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(next.error!),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+
+      // Si authentifié, rediriger vers home
+      if (next.isAuthenticated && mounted) {
+        context.go(AppRoutes.home);
+      }
+    });
+
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
       body: SafeArea(
@@ -171,7 +121,6 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                 Center(
                   child: Column(
                     children: [
-                      // TODO: Remplacer par le vrai logo depuis assets/images/
                       Container(
                         width: 100,
                         height: 100,
@@ -238,10 +187,11 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
 
                 // ========== FORMULAIRE ==========
 
-                // Champ Nom (uniquement pour inscription)
+                // Champ Nom (inscription uniquement)
                 if (!_isLoginMode) ...[
                   TextFormField(
                     controller: _nameController,
+                    enabled: !authState.isLoading,
                     decoration: InputDecoration(
                       labelText: 'Nom complet',
                       hintText: 'Ex: Mamadou Diallo',
@@ -267,6 +217,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                 TextFormField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
+                  enabled: !authState.isLoading,
                   decoration: InputDecoration(
                     labelText: 'Email',
                     hintText: 'exemple@email.com',
@@ -279,7 +230,6 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                     if (value == null || value.trim().isEmpty) {
                       return 'L\'email est requis';
                     }
-                    // Validation basique de l'email
                     if (!value.contains('@') || !value.contains('.')) {
                       return 'Email invalide';
                     }
@@ -293,6 +243,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                 TextFormField(
                   controller: _passwordController,
                   obscureText: true,
+                  enabled: !authState.isLoading,
                   decoration: InputDecoration(
                     labelText: 'Mot de passe',
                     hintText: 'Min. 6 caractères',
@@ -312,12 +263,13 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                   },
                 ),
 
-                // Champ Confirmation (uniquement pour inscription)
+                // Champ Confirmation (inscription uniquement)
                 if (!_isLoginMode) ...[
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _confirmPasswordController,
                     obscureText: true,
+                    enabled: !authState.isLoading,
                     decoration: InputDecoration(
                       labelText: 'Confirmez le mot de passe',
                       hintText: 'Ressaisir le mot de passe',
@@ -345,58 +297,18 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                 // ========== BOUTON DE SOUMISSION ==========
                 PrimaryButton(
                   text: _isLoginMode ? 'Se connecter' : 'S\'inscrire',
-                  onPressed: _isLoading ? null : _handleSubmit,
-                  isLoading: _isLoading,
+                  onPressed: authState.isLoading ? null : _handleSubmit,
+                  isLoading: authState.isLoading,
                 ),
 
-                // Bouton Google
-                const SizedBox(height: 16),
-                SizedBox(
-                  height: 56,
-                  child: OutlinedButton(
-                    onPressed: _isLoading
-                        ? null
-                        : () async {
-                            // TODO: Implémenter la connexion Google via Supabase ou Firebase
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Connexion Google à implémenter'),
-                              ),
-                            );
-                          },
-                    style: OutlinedButton.styleFrom(
-                      side: BorderSide(color: Colors.grey.shade300),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      backgroundColor: Colors.white,
-                      foregroundColor: Colors.black,
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        // Logo Google depuis assets
-                        Image.asset(
-                          'assets/icons/google-g-logo.webp',
-                          width: 20,
-                          height: 20,
-                        ),
-                        const SizedBox(width: 12),
-                        const Text(
-                          'Continuer avec Google',
-                          style: TextStyle(fontWeight: FontWeight.w600),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                // Lien "Mot de passe oublié" (uniquement en mode connexion)
+                // Lien "Mot de passe oublié"
                 if (_isLoginMode) ...[
                   const SizedBox(height: 16),
                   Center(
                     child: TextButton(
-                      onPressed: () => context.go('/reset-password'),
+                      onPressed: authState.isLoading
+                          ? null
+                          : () => context.go(AppRoutes.resetPassword),
                       child: const Text('Mot de passe oublié ?'),
                     ),
                   ),
@@ -409,7 +321,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     );
   }
 
-  /// Widget pour construire un bouton d'onglet (Connexion / Inscription)
+  /// Widget pour les onglets
   Widget _buildTabButton({
     required String label,
     required bool isSelected,

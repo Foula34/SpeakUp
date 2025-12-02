@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:speakup_mvp/core/providers/auth_provider.dart';
 import '../common/constants/app_colors.dart';
 import '../common/constants/app_routes.dart';
 import '../features/auth/presentation/auth_screen.dart';
@@ -10,10 +11,9 @@ import '../features/practice/presentation/practice_screen.dart';
 
 /// Configuration principale de l'application SpeakUp
 ///
-/// Ce fichier configure :
-/// - Le thème de l'application
-/// - Le routing avec GoRouter
-/// - L'état global avec Riverpod
+/// ✅ Redirection automatique basée sur l'authentification
+/// ✅ Protection des routes
+/// ✅ Gestion du thème
 class SpeakUpApp extends ConsumerWidget {
   const SpeakUpApp({super.key});
 
@@ -25,11 +25,9 @@ class SpeakUpApp extends ConsumerWidget {
 
       // ========== THÈME ==========
       theme: ThemeData(
-        // Couleurs principales
         primaryColor: AppColors.primary,
         scaffoldBackgroundColor: AppColors.backgroundLight,
 
-        // AppBar
         appBarTheme: const AppBarTheme(
           backgroundColor: AppColors.surfaceLight,
           foregroundColor: AppColors.textPrimaryLight,
@@ -37,11 +35,8 @@ class SpeakUpApp extends ConsumerWidget {
           centerTitle: false,
         ),
 
-        // Polices
-        // TODO: Ajouter la police Inter dans assets/fonts/ et décommenter
+        // TODO: Ajouter la police Inter dans assets/fonts/
         // fontFamily: 'Inter',
-
-        // Champs de texte
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
           fillColor: AppColors.surfaceLight,
@@ -67,7 +62,6 @@ class SpeakUpApp extends ConsumerWidget {
           ),
         ),
 
-        // Boutons
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.primary,
@@ -80,7 +74,6 @@ class SpeakUpApp extends ConsumerWidget {
           ),
         ),
 
-        // Bottom Navigation Bar
         bottomNavigationBarTheme: const BottomNavigationBarThemeData(
           backgroundColor: AppColors.surfaceLight,
           selectedItemColor: AppColors.primary,
@@ -89,7 +82,6 @@ class SpeakUpApp extends ConsumerWidget {
           elevation: 8,
         ),
 
-        // Cartes
         cardTheme: CardThemeData(
           color: AppColors.surfaceLight,
           elevation: 0,
@@ -101,81 +93,123 @@ class SpeakUpApp extends ConsumerWidget {
       ),
 
       // ========== ROUTING ==========
-      routerConfig: _router,
+      routerConfig: _createRouter(ref),
     );
   }
 }
 
-/// Configuration du routing avec GoRouter
-///
-/// TODO SUPABASE : Ajouter une logique de redirection basée sur l'authentification
-/// - Si l'utilisateur est connecté → rediriger vers /home
-/// - Si l'utilisateur n'est pas connecté → rediriger vers /login
-final _router = GoRouter(
-  initialLocation: '/practice', // 🎯 Pour tester l'écran d'enregistrement
+/// Créer le router avec redirection automatique
+GoRouter _createRouter(WidgetRef ref) {
+  return GoRouter(
+    initialLocation: AppRoutes.login,
 
-  routes: [
-    // ========== AUTHENTIFICATION ==========
-    GoRoute(
-      path: AppRoutes.login,
-      builder: (context, state) => const AuthScreen(),
-    ),
-    GoRoute(
-      path: AppRoutes.resetPassword,
-      builder: (context, state) => const ForgotPasswordScreen(),
-    ),
+    // ========== REDIRECTION AUTOMATIQUE ==========
+    redirect: (context, state) {
+      // Récupérer l'état d'authentification
+      final authState = ref.read(authProvider);
+      final isAuthenticated = authState.isAuthenticated;
+      final isLoading = authState.isLoading;
 
-    // ========== NAVIGATION PRINCIPALE ==========
-    GoRoute(
-      path: AppRoutes.home,
-      builder: (context, state) => const HomeScreen(),
-    ),
-    
-    // ========== PRATIQUE (ENREGISTREMENT) ==========
-    GoRoute(
-      path: '/practice',
-      builder: (context, state) {
-        // Récupérer le titre du défi depuis les paramètres
-        final extra = state.extra as Map<String, dynamic>?;
-        final challengeTitle = extra?['challengeTitle'] as String? ?? 
-            'Présenter son projet en 2 minutes';
-        
-        return PracticeScreen(challengeTitle: challengeTitle);
-      },
-    ),
+      // Pages publiques (accessibles sans connexion)
+      final publicRoutes = [AppRoutes.login, AppRoutes.resetPassword];
 
-    // TODO: Ajouter les autres routes au fur et à mesure
-    // GoRoute(
-    //   path: AppRoutes.feed,
-    //   builder: (context, state) => const CommunityFeedScreen(),
-    // ),
-    // etc.
-  ],
+      final isOnPublicRoute = publicRoutes.contains(state.matchedLocation);
 
-  // Page d'erreur (route non trouvée)
-  errorBuilder: (context, state) => Scaffold(
-    body: Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.error_outline, size: 64, color: AppColors.error),
-          const SizedBox(height: 16),
-          Text(
-            'Page non trouvée',
-            style: Theme.of(context).textTheme.headlineSmall,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            state.uri.toString(),
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-          const SizedBox(height: 24),
-          ElevatedButton(
-            onPressed: () => context.go(AppRoutes.home),
-            child: const Text('Retour à l\'accueil'),
-          ),
-        ],
+      // Si l'app charge l'état initial, ne rien faire
+      if (isLoading) {
+        return null;
+      }
+
+      // Si l'utilisateur n'est PAS connecté et essaie d'accéder à une page privée
+      if (!isAuthenticated && !isOnPublicRoute) {
+        return AppRoutes.login;
+      }
+
+      // Si l'utilisateur EST connecté et essaie d'accéder à login/signup
+      if (isAuthenticated && isOnPublicRoute) {
+        return AppRoutes.home;
+      }
+
+      // Laisser passer
+      return null;
+    },
+
+    // ========== RAFRAÎCHIR QUAND L'AUTH CHANGE ==========
+    refreshListenable: _AuthChangeNotifier(ref),
+
+    routes: [
+      // ========== AUTHENTIFICATION ==========
+      GoRoute(
+        path: AppRoutes.login,
+        builder: (context, state) => const AuthScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.resetPassword,
+        builder: (context, state) => const ForgotPasswordScreen(),
+      ),
+
+      // ========== NAVIGATION PRINCIPALE ==========
+      GoRoute(
+        path: AppRoutes.home,
+        builder: (context, state) => const HomeScreen(),
+      ),
+
+      // ========== PRATIQUE ==========
+      GoRoute(
+        path: '/practice',
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          final challengeTitle =
+              extra?['challengeTitle'] as String? ??
+              'Présenter son projet en 2 minutes';
+
+          return PracticeScreen(challengeTitle: challengeTitle);
+        },
+      ),
+
+      // TODO: Ajouter les autres routes
+      // GoRoute(
+      //   path: AppRoutes.feed,
+      //   builder: (context, state) => const CommunityFeedScreen(),
+      // ),
+    ],
+
+    // ========== PAGE D'ERREUR ==========
+    errorBuilder: (context, state) => Scaffold(
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, size: 64, color: AppColors.error),
+            const SizedBox(height: 16),
+            Text(
+              'Page non trouvée',
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              state.uri.toString(),
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: () => context.go(AppRoutes.home),
+              child: const Text('Retour à l\'accueil'),
+            ),
+          ],
+        ),
       ),
     ),
-  ),
-);
+  );
+}
+
+/// Notifier pour rafraîchir le router quand l'auth change
+class _AuthChangeNotifier extends ChangeNotifier {
+  _AuthChangeNotifier(WidgetRef ref) {
+    ref.listen<AuthState>(authProvider, (previous, next) {
+      if (previous?.isAuthenticated != next.isAuthenticated) {
+        notifyListeners();
+      }
+    });
+  }
+}
