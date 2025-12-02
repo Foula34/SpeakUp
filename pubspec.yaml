@@ -62,6 +62,8 @@ dependencies:
   # UI
   shimmer: ^3.0.0             # Effet de chargement
   cached_network_image: ^3.4.1  # Cache des images du réseau
+  iconify_flutter: ^0.0.5     # Icônes vectorielles (Google, etc.)
+  supabase: ^2.10.0
 
 dev_dependencies:
   flutter_test:
@@ -90,7 +92,10 @@ flutter:
   uses-material-design: true
 
   # To add assets to your application, add an assets section, like this:
- 
+  assets:
+    - assets/images/
+    - assets/icons/
+    - assets/ambiance_sounds/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
@@ -98,5 +103,4 @@ flutter:
   # For details regarding adding assets from package dependencies, see
   # https://flutter.dev/to/asset-from-package
 
-  # Polices personnalisées
  
