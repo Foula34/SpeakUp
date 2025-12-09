@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'dart:math' as Math;
 
 /// Écran d'accueil principal de l'application SpeakUp
@@ -192,7 +193,13 @@ class HomeScreen extends ConsumerWidget {
                     height: 56,
                     child: ElevatedButton(
                       onPressed: () {
-                        // TODO: Naviguer vers l'écran de pratique
+                        // Navigation vers l'écran de pratique avec le titre du défi
+                        context.push(
+                          '/practice',
+                          extra: {
+                            'challengeTitle': 'Parlez d\'un moment qui a changé votre vie',
+                          },
+                        );
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF2563EB), // Bleu

@@ -49,6 +49,7 @@ dependencies:
   camera: ^0.11.3             # Capture vidéo
   record: ^5.1.2              # Enregistrement audio
   audioplayers: ^6.1.0        # Lecture audio (pour les ambiances)
+  just_audio: ^0.9.40         # Lecteur audio professionnel (pour la revue)
   video_player: ^2.9.2        # Lecture vidéo
   ffmpeg_kit_flutter: ^6.0.3  # Compression vidéo
   image_picker: ^1.1.2        # Sélectionner images/vidéos
