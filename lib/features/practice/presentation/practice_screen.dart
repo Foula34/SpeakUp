@@ -7,21 +7,18 @@ import '../providers/recording_provider.dart';
 /// Permet d'enregistrer sa voix avec un timer et des ambiances
 class PracticeScreen extends ConsumerWidget {
   final String challengeTitle;
-  
-  const PracticeScreen({
-    super.key,
-    required this.challengeTitle,
-  });
-  
+
+  const PracticeScreen({super.key, required this.challengeTitle});
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // Récupérer l'état depuis le provider
     final recordingState = ref.watch(recordingProvider);
     final recordingNotifier = ref.read(recordingProvider.notifier);
-    
+
     return Scaffold(
       backgroundColor: Colors.grey[100],
-      
+
       // Barre du haut
       appBar: AppBar(
         backgroundColor: Colors.grey[100],
@@ -47,67 +44,63 @@ class PracticeScreen extends ConsumerWidget {
           ),
         ],
       ),
-      
+
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
           child: Column(
             children: [
               const SizedBox(height: 20),
-              
+
               // Titre du défi
               Text(
-              challengeTitle,
-              style: const TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
+                challengeTitle,
+                style: const TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+                textAlign: TextAlign.center,
               ),
-              textAlign: TextAlign.center,
-              ),
-              
+
               const SizedBox(height: 40),
-              
+
               // Timer (affichage du temps)
               _buildTimer(recordingState),
-              
+
               const SizedBox(height: 60),
-              
+
               // Section Durée
               const Text(
-              'Durée',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: Colors.black87,
-              ),
+                'Durée',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
+                ),
               ),
               const SizedBox(height: 16),
               _buildDurationSelector(recordingState, recordingNotifier),
-              
+
               const SizedBox(height: 40),
-              
+
               // Section Ambiance
               const Text(
-              'Ambiance',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: Colors.black87,
-              ),
+                'Ambiance',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
+                ),
               ),
               const SizedBox(height: 16),
               _buildAmbianceSelector(recordingState, recordingNotifier),
-              
+
               const SizedBox(height: 60),
-              
+
               // Gros bouton REC
-              _buildRecordButton(
-              recordingState,
-              recordingNotifier,
-              context,
-            ),
-            
+              _buildRecordButton(recordingState, recordingNotifier, context, ref),
+
               const SizedBox(height: 40),
             ],
           ),
@@ -115,7 +108,7 @@ class PracticeScreen extends ConsumerWidget {
       ),
     );
   }
-  
+
   /// Widget qui affiche le timer (00:00 / 02:00)
   Widget _buildTimer(RecordingState state) {
     // Convertir les secondes en format MM:SS
@@ -124,7 +117,7 @@ class PracticeScreen extends ConsumerWidget {
       final secs = seconds % 60;
       return '${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
     }
-    
+
     return FittedBox(
       fit: BoxFit.scaleDown,
       child: Text(
@@ -138,7 +131,7 @@ class PracticeScreen extends ConsumerWidget {
       ),
     );
   }
-  
+
   /// Widget qui affiche les boutons de durée (30s, 1min, 2min)
   Widget _buildDurationSelector(
     RecordingState state,
@@ -154,7 +147,7 @@ class PracticeScreen extends ConsumerWidget {
       ],
     );
   }
-  
+
   /// Bouton individuel de durée
   Widget _buildDurationButton(
     String label,
@@ -164,7 +157,7 @@ class PracticeScreen extends ConsumerWidget {
   ) {
     final isSelected = state.maxDuration == seconds;
     final isDisabled = state.isRecording;
-    
+
     return Expanded(
       child: GestureDetector(
         onTap: isDisabled ? null : () => notifier.setDuration(seconds),
@@ -190,7 +183,7 @@ class PracticeScreen extends ConsumerWidget {
       ),
     );
   }
-  
+
   /// Widget qui affiche les boutons d'ambiance
   Widget _buildAmbianceSelector(
     RecordingState state,
@@ -206,7 +199,7 @@ class PracticeScreen extends ConsumerWidget {
       ],
     );
   }
-  
+
   /// Bouton individuel d'ambiance
   Widget _buildAmbianceButton(
     String label,
@@ -215,7 +208,7 @@ class PracticeScreen extends ConsumerWidget {
   ) {
     final isSelected = state.selectedAmbiance == label;
     final isDisabled = state.isRecording;
-    
+
     return Expanded(
       child: GestureDetector(
         onTap: isDisabled ? null : () => notifier.setAmbiance(label),
@@ -241,32 +234,30 @@ class PracticeScreen extends ConsumerWidget {
       ),
     );
   }
-  
+
   /// Le gros bouton REC/STOP en bas
   Widget _buildRecordButton(
     RecordingState state,
     RecordingNotifier notifier,
     BuildContext context,
+    WidgetRef ref,
   ) {
     return GestureDetector(
       onTap: () async {
+        // Si on est en train d'enregistrer, on va s'arrêter
+        final wasRecording = state.isRecording;
+        
         await notifier.toggleRecording(challengeTitle);
         
-        // Si l'enregistrement vient de s'arrêter, aller à l'écran de revue
-        if (!state.isRecording && state.recordingPath != null) {
-          // Attendre un peu pour que l'état se mette à jour
-          Future.delayed(const Duration(milliseconds: 500), () {
-            if (context.mounted) {
-              context.push(
-                '/review',
-                extra: {
-                  'recordingPath': state.recordingPath,
-                  'challengeTitle': challengeTitle,
-                  'duration': state.currentDuration,
-                },
-              );
-            }
-          });
+        // Si on arrête l'enregistrement et qu'il y a un fichier enregistré
+        if (wasRecording) {
+          // Attendre un peu pour que l'état se mette à jour complètement
+          await Future.delayed(const Duration(milliseconds: 500));
+          
+          if (context.mounted) {
+            // Navigue vers l'écran de revue
+            context.push('/review');
+          }
         }
       },
       child: Container(

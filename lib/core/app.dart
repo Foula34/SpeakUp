@@ -8,6 +8,7 @@ import '../features/auth/presentation/auth_screen.dart';
 import '../features/auth/presentation/forgot_password_screen.dart';
 import '../features/home/presentation/home_screen.dart';
 import '../features/practice/presentation/practice_screen.dart';
+import '../features/practice/presentation/review_session_screen.dart';
 
 /// Configuration principale de l'application SpeakUp
 ///
@@ -165,6 +166,12 @@ GoRouter _createRouter(WidgetRef ref) {
 
           return PracticeScreen(challengeTitle: challengeTitle);
         },
+      ),
+      
+      // Route pour l'écran de review après enregistrement
+      GoRoute(
+        path: '/review',
+        builder: (context, state) => const ReviewSessionScreen(),
       ),
 
       // TODO: Ajouter les autres routes
