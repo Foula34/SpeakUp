@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../providers/review_session_provider.dart';
 import '../providers/recording_provider.dart';
 
@@ -21,7 +22,9 @@ class _ReviewSessionScreenState extends ConsumerState<ReviewSessionScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final recordingState = ref.read(recordingProvider);
       if (recordingState.recordingPath != null) {
-        ref.read(reviewSessionProvider.notifier).initialize(
+        ref
+            .read(reviewSessionProvider.notifier)
+            .initialize(
               audioPath: recordingState.recordingPath!,
               durationInSeconds: recordingState.currentDuration,
               challengeTitle: recordingState.challengeTitle,
@@ -36,7 +39,9 @@ class _ReviewSessionScreenState extends ConsumerState<ReviewSessionScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF101622) : const Color(0xFFF6F6F8),
+      backgroundColor: isDark
+          ? const Color(0xFF101622)
+          : const Color(0xFFF6F6F8),
       body: SafeArea(
         child: Column(
           children: [
@@ -60,7 +65,9 @@ class _ReviewSessionScreenState extends ConsumerState<ReviewSessionScreen> {
                           // Conseils
                           _buildAdviceCard(state, isDark),
 
-                          const SizedBox(height: 100), // Espace pour les boutons
+                          const SizedBox(
+                            height: 100,
+                          ), // Espace pour les boutons
                         ],
                       ),
                     ),
@@ -82,7 +89,7 @@ class _ReviewSessionScreenState extends ConsumerState<ReviewSessionScreen> {
         children: [
           // Bouton retour
           InkWell(
-            onTap: () => Navigator.pop(context),
+            onTap: () => context.go('/home'),
             borderRadius: BorderRadius.circular(12),
             child: Container(
               width: 48,
@@ -150,7 +157,7 @@ class _ReviewSessionScreenState extends ConsumerState<ReviewSessionScreen> {
             // Overlay sombre
             Container(
               decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.3),
+                color: Colors.black.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
@@ -166,7 +173,7 @@ class _ReviewSessionScreenState extends ConsumerState<ReviewSessionScreen> {
                   width: 64,
                   height: 64,
                   decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.4),
+                    color: Colors.black.withValues(alpha: 0.4),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
@@ -237,7 +244,7 @@ class _ReviewSessionScreenState extends ConsumerState<ReviewSessionScreen> {
         Container(
           height: 4,
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.4),
+            color: Colors.white.withValues(alpha: 0.4),
             borderRadius: BorderRadius.circular(2),
           ),
         ),
@@ -257,7 +264,9 @@ class _ReviewSessionScreenState extends ConsumerState<ReviewSessionScreen> {
 
         // Curseur
         Positioned(
-          left: (MediaQuery.of(context).size.width - 32) * progress.clamp(0.0, 1.0),
+          left:
+              (MediaQuery.of(context).size.width - 32) *
+              progress.clamp(0.0, 1.0),
           top: -4,
           child: Container(
             width: 12,
@@ -351,9 +360,7 @@ class _ReviewSessionScreenState extends ConsumerState<ReviewSessionScreen> {
             ? null
             : Border(
                 bottom: BorderSide(
-                  color: isDark
-                      ? Colors.grey.shade800
-                      : Colors.grey.shade200,
+                  color: isDark ? Colors.grey.shade800 : Colors.grey.shade200,
                   width: 1,
                 ),
               ),
@@ -364,16 +371,14 @@ class _ReviewSessionScreenState extends ConsumerState<ReviewSessionScreen> {
           // Icône + Label
           Row(
             children: [
-              Icon(
-                icon,
-                color: const Color(0xFF1152D4),
-                size: 20,
-              ),
+              Icon(icon, color: const Color(0xFF1152D4), size: 20),
               const SizedBox(width: 12),
               Text(
                 label,
                 style: TextStyle(
-                  color: isDark ? Colors.grey.shade400 : const Color(0xFF6C757D),
+                  color: isDark
+                      ? Colors.grey.shade400
+                      : const Color(0xFF6C757D),
                   fontSize: 14,
                 ),
               ),
@@ -402,7 +407,7 @@ class _ReviewSessionScreenState extends ConsumerState<ReviewSessionScreen> {
       margin: const EdgeInsets.only(top: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF1152D4).withOpacity(isDark ? 0.2 : 0.1),
+        color: Color(0xFF1152D4).withValues(alpha: isDark ? 0.2 : 0.1),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -411,11 +416,7 @@ class _ReviewSessionScreenState extends ConsumerState<ReviewSessionScreen> {
           // Icône + Label
           Row(
             children: [
-              const Icon(
-                Icons.lightbulb,
-                color: Color(0xFF1152D4),
-                size: 20,
-              ),
+              const Icon(Icons.lightbulb, color: Color(0xFF1152D4), size: 20),
               const SizedBox(width: 8),
               Text(
                 'Conseil du Jour',
@@ -486,7 +487,7 @@ class _ReviewSessionScreenState extends ConsumerState<ReviewSessionScreen> {
                 );
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF1152D4).withOpacity(0.2),
+                backgroundColor: Color(0xFF1152D4).withValues(alpha: 0.2),
                 foregroundColor: const Color(0xFF1152D4),
                 elevation: 0,
                 shape: RoundedRectangleBorder(
@@ -495,10 +496,7 @@ class _ReviewSessionScreenState extends ConsumerState<ReviewSessionScreen> {
               ),
               child: const Text(
                 'Sauvegarder dans le Journal',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
             ),
           ),
@@ -512,7 +510,7 @@ class _ReviewSessionScreenState extends ConsumerState<ReviewSessionScreen> {
             child: ElevatedButton(
               onPressed: () {
                 // TODO: Navigation vers l'écran de publication
-                Navigator.pushNamed(context, '/publish');
+                context.go('/publish');
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF1152D4),
@@ -524,10 +522,7 @@ class _ReviewSessionScreenState extends ConsumerState<ReviewSessionScreen> {
               ),
               child: const Text(
                 'Publier dans la Communauté',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
             ),
           ),

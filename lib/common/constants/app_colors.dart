@@ -6,11 +6,15 @@ class AppColors {
   // Empêcher l'instanciation
   AppColors._();
 
-  // Couleur primaire (Bleu)
-  static const Color primary = Color(0xFF1152D4);
+  // Couleur primaire (Bleu) - Design HTML
+  static const Color primary = Color(0xFF0A2463);
+  static const Color primaryOld = Color(0xFF1152D4); // Ancienne couleur
+  
+  // Couleur accent (Bleu clair) - Design HTML
+  static const Color accent = Color(0xFF3E92CC);
   
   // Backgrounds
-  static const Color backgroundLight = Color(0xFFF6F6F8);
+  static const Color backgroundLight = Color(0xFFF8F9FA);
   static const Color backgroundDark = Color(0xFF101622);
   
   // Textes (Light Mode)

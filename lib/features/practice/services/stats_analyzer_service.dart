@@ -1,5 +1,3 @@
-import 'package:just_audio/just_audio.dart';
-
 /// Service qui analyse les enregistrements audio pour extraire des statistiques
 /// C'est comme un "expert" qui écoute votre discours et vous donne des informations
 class StatsAnalyzerService {
