@@ -25,7 +25,7 @@ class PracticeScreen extends ConsumerWidget {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => context.pop(),
+          onPressed: () => context.go('/home'),
         ),
         title: const Text(
           'Enregistrement',
@@ -99,7 +99,7 @@ class PracticeScreen extends ConsumerWidget {
               const SizedBox(height: 60),
 
               // Gros bouton REC
-              _buildRecordButton(recordingState, recordingNotifier, context, ref),
+              _buildRecordButton(recordingState, recordingNotifier, context),
 
               const SizedBox(height: 40),
             ],
@@ -240,24 +240,26 @@ class PracticeScreen extends ConsumerWidget {
     RecordingState state,
     RecordingNotifier notifier,
     BuildContext context,
-    WidgetRef ref,
   ) {
     return GestureDetector(
       onTap: () async {
-        // Si on est en train d'enregistrer, on va s'arrêter
-        final wasRecording = state.isRecording;
-        
         await notifier.toggleRecording(challengeTitle);
-        
-        // Si on arrête l'enregistrement et qu'il y a un fichier enregistré
-        if (wasRecording) {
-          // Attendre un peu pour que l'état se mette à jour complètement
-          await Future.delayed(const Duration(milliseconds: 500));
-          
-          if (context.mounted) {
-            // Navigue vers l'écran de revue
-            context.push('/review');
-          }
+
+        // Si l'enregistrement vient de s'arrêter, aller à l'écran de revue
+        if (!state.isRecording && state.recordingPath != null) {
+          // Attendre un peu pour que l'état se mette à jour
+          Future.delayed(const Duration(milliseconds: 500), () {
+            if (context.mounted) {
+              context.push(
+                '/review',
+                extra: {
+                  'recordingPath': state.recordingPath,
+                  'challengeTitle': challengeTitle,
+                  'duration': state.currentDuration,
+                },
+              );
+            }
+          });
         }
       },
       child: Container(

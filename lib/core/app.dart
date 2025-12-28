@@ -4,9 +4,9 @@ import 'package:go_router/go_router.dart';
 import 'package:speakup_mvp/core/providers/auth_provider.dart';
 import '../common/constants/app_colors.dart';
 import '../common/constants/app_routes.dart';
+import '../common/screens/main_navigation_screen.dart';
 import '../features/auth/presentation/auth_screen.dart';
 import '../features/auth/presentation/forgot_password_screen.dart';
-import '../features/home/presentation/home_screen.dart';
 import '../features/practice/presentation/practice_screen.dart';
 import '../features/practice/presentation/review_session_screen.dart';
 
@@ -102,10 +102,14 @@ class SpeakUpApp extends ConsumerWidget {
 /// Créer le router avec redirection automatique
 GoRouter _createRouter(WidgetRef ref) {
   return GoRouter(
-    initialLocation: AppRoutes.login,
+    initialLocation: AppRoutes.home,
 
     // ========== REDIRECTION AUTOMATIQUE ==========
     redirect: (context, state) {
+      // TEMPORAIRE : Désactivé pour tester la navigation
+      return null;
+
+      /* COMMENTÉ TEMPORAIREMENT
       // Récupérer l'état d'authentification
       final authState = ref.read(authProvider);
       final isAuthenticated = authState.isAuthenticated;
@@ -133,6 +137,7 @@ GoRouter _createRouter(WidgetRef ref) {
 
       // Laisser passer
       return null;
+      */
     },
 
     // ========== RAFRAÎCHIR QUAND L'AUTH CHANGE ==========
@@ -152,7 +157,7 @@ GoRouter _createRouter(WidgetRef ref) {
       // ========== NAVIGATION PRINCIPALE ==========
       GoRoute(
         path: AppRoutes.home,
-        builder: (context, state) => const HomeScreen(),
+        builder: (context, state) => const MainNavigationScreen(),
       ),
 
       // ========== PRATIQUE ==========
@@ -167,11 +172,23 @@ GoRouter _createRouter(WidgetRef ref) {
           return PracticeScreen(challengeTitle: challengeTitle);
         },
       ),
-      
+
       // Route pour l'écran de review après enregistrement
       GoRoute(
         path: '/review',
         builder: (context, state) => const ReviewSessionScreen(),
+      ),
+
+      // ========== PROGRÈS ==========
+      GoRoute(
+        path: '/progress',
+        builder: (context, state) => const MainNavigationScreen(),
+      ),
+
+      // ========== PROFIL ==========
+      GoRoute(
+        path: AppRoutes.profile,
+        builder: (context, state) => const MainNavigationScreen(),
       ),
 
       // TODO: Ajouter les autres routes
