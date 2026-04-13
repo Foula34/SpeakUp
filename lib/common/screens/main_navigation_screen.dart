@@ -1,26 +1,30 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import '../../features/home/presentation/home_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
-import '../../common/constants/app_routes.dart';
 import '../widgets/navigation/bottom_nav_bar.dart';
 import 'practice_main_screen.dart';
 import 'progress_screen.dart';
 
 /// Écran principal qui gère la navigation avec la BottomNavBar
+///
+/// Utilise [IndexedStack] pour préserver l'état de chaque onglet.
+/// Le paramètre [initialTab] permet de démarrer sur un onglet spécifique.
 class MainNavigationScreen extends StatefulWidget {
-  const MainNavigationScreen({super.key});
+  final int initialTab;
+
+  const MainNavigationScreen({super.key, this.initialTab = 0});
 
   @override
   State<MainNavigationScreen> createState() => _MainNavigationScreenState();
 }
 
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
-  // Obtenir l'index courant basé sur la route actuelle
-  int _getCurrentIndex(String location) {
-    if (location.startsWith('/progress')) return 2;
-    if (location.startsWith('/profile')) return 3;
-    return 0; // Accueil par défaut
+  late int _currentIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentIndex = widget.initialTab;
   }
 
   // Liste des écrans correspondant aux onglets
@@ -32,35 +36,17 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   ];
 
   void _onTabTapped(int index) {
-    // Navigation avec GoRouter en fonction de l'index
-    switch (index) {
-      case 0:
-        context.go(AppRoutes.home);
-        break;
-      case 1:
-        context.go('/practice');
-        break;
-      case 2:
-        context.go('/progress');
-        break;
-      case 3:
-        context.go(AppRoutes.profile);
-        break;
-      default:
-        context.go(AppRoutes.home);
-    }
+    setState(() {
+      _currentIndex = index;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    // Récupérer la route actuelle depuis GoRouter
-    final currentLocation = GoRouterState.of(context).uri.toString();
-    final currentIndex = _getCurrentIndex(currentLocation);
-
     return Scaffold(
-      body: IndexedStack(index: currentIndex, children: _screens),
+      body: IndexedStack(index: _currentIndex, children: _screens),
       bottomNavigationBar: BottomNavBar(
-        currentIndex: currentIndex,
+        currentIndex: _currentIndex,
         onTap: _onTabTapped,
       ),
     );

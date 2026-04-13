@@ -7,14 +7,20 @@ import '../common/constants/app_routes.dart';
 import '../common/screens/main_navigation_screen.dart';
 import '../features/auth/presentation/auth_screen.dart';
 import '../features/auth/presentation/forgot_password_screen.dart';
+import '../features/community/presentation/community_feed_screen.dart';
+import '../features/community/presentation/publish_screen.dart';
+import '../features/community/presentation/comments_screen.dart';
 import '../features/practice/presentation/practice_screen.dart';
 import '../features/practice/presentation/review_session_screen.dart';
+import '../features/profile/presentation/leaderboard_screen.dart';
+import '../features/settings/presentation/settings_screen.dart';
 
 /// Configuration principale de l'application SpeakUp
 ///
 /// ✅ Redirection automatique basée sur l'authentification
 /// ✅ Protection des routes
-/// ✅ Gestion du thème
+/// ✅ Gestion du thème (clair + sombre)
+/// ✅ Police Inter activée
 class SpeakUpApp extends ConsumerWidget {
   const SpeakUpApp({super.key});
 
@@ -24,77 +30,181 @@ class SpeakUpApp extends ConsumerWidget {
       title: 'SpeakUp',
       debugShowCheckedModeBanner: false,
 
-      // ========== THÈME ==========
-      theme: ThemeData(
-        primaryColor: AppColors.primary,
-        scaffoldBackgroundColor: AppColors.backgroundLight,
+      // ========== THÈME CLAIR ==========
+      theme: _buildLightTheme(),
 
-        appBarTheme: const AppBarTheme(
-          backgroundColor: AppColors.surfaceLight,
-          foregroundColor: AppColors.textPrimaryLight,
+      // ========== THÈME SOMBRE ==========
+      darkTheme: _buildDarkTheme(),
+
+      // ========== MODE AUTOMATIQUE (suit le système) ==========
+      themeMode: ThemeMode.dark,
+
+      // ========== ROUTING ==========
+      routerConfig: _createRouter(ref),
+    );
+  }
+
+  /// Thème clair
+  ThemeData _buildLightTheme() {
+    return ThemeData(
+      brightness: Brightness.light,
+      primaryColor: AppColors.primary,
+      scaffoldBackgroundColor: AppColors.backgroundLight,
+      fontFamily: 'Inter',
+
+      colorScheme: const ColorScheme.light(
+        primary: AppColors.primary,
+        secondary: AppColors.accent,
+        surface: AppColors.surfaceLight,
+        error: AppColors.error,
+        onPrimary: Colors.white,
+        onSecondary: Colors.white,
+        onSurface: AppColors.textPrimaryLight,
+        onError: Colors.white,
+      ),
+
+      appBarTheme: const AppBarTheme(
+        backgroundColor: AppColors.surfaceLight,
+        foregroundColor: AppColors.textPrimaryLight,
+        elevation: 0,
+        centerTitle: false,
+      ),
+
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: AppColors.surfaceLight,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: AppColors.borderLight),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: AppColors.borderLight),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: AppColors.primary, width: 2),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: AppColors.error),
+        ),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 16,
+        ),
+      ),
+
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.primary,
+          foregroundColor: Colors.white,
           elevation: 0,
-          centerTitle: false,
-        ),
-
-        // TODO: Ajouter la police Inter dans assets/fonts/
-        // fontFamily: 'Inter',
-        inputDecorationTheme: InputDecorationTheme(
-          filled: true,
-          fillColor: AppColors.surfaceLight,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: AppColors.borderLight),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: AppColors.borderLight),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: AppColors.primary, width: 2),
-          ),
-          errorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: AppColors.error),
-          ),
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 16,
-          ),
-        ),
-
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primary,
-            foregroundColor: Colors.white,
-            elevation: 0,
-            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        ),
-
-        bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-          backgroundColor: AppColors.surfaceLight,
-          selectedItemColor: AppColors.primary,
-          unselectedItemColor: AppColors.textSecondaryLight,
-          type: BottomNavigationBarType.fixed,
-          elevation: 8,
-        ),
-
-        cardTheme: CardThemeData(
-          color: AppColors.surfaceLight,
-          elevation: 0,
+          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
-            side: const BorderSide(color: AppColors.borderLight),
           ),
         ),
       ),
 
-      // ========== ROUTING ==========
-      routerConfig: _createRouter(ref),
+      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+        backgroundColor: AppColors.surfaceLight,
+        selectedItemColor: AppColors.accent,
+        unselectedItemColor: AppColors.textSecondaryLight,
+        type: BottomNavigationBarType.fixed,
+        elevation: 8,
+      ),
+
+      cardTheme: CardThemeData(
+        color: AppColors.surfaceLight,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: const BorderSide(color: AppColors.borderLight),
+        ),
+      ),
+    );
+  }
+
+  /// Thème sombre
+  ThemeData _buildDarkTheme() {
+    return ThemeData(
+      brightness: Brightness.dark,
+      primaryColor: AppColors.primary,
+      scaffoldBackgroundColor: AppColors.backgroundDark,
+      fontFamily: 'Inter',
+
+      colorScheme: const ColorScheme.dark(
+        primary: AppColors.accent,
+        secondary: AppColors.accent,
+        surface: AppColors.surfaceDark,
+        error: AppColors.error,
+        onPrimary: Colors.white,
+        onSecondary: Colors.white,
+        onSurface: AppColors.textPrimaryDark,
+        onError: Colors.white,
+      ),
+
+      appBarTheme: const AppBarTheme(
+        backgroundColor: AppColors.surfaceDark,
+        foregroundColor: AppColors.textPrimaryDark,
+        elevation: 0,
+        centerTitle: false,
+      ),
+
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: AppColors.surfaceDark,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: AppColors.borderDark),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: AppColors.borderDark),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: AppColors.accent, width: 2),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: AppColors.error),
+        ),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 16,
+        ),
+      ),
+
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.accent,
+          foregroundColor: Colors.white,
+          elevation: 0,
+          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      ),
+
+      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+        backgroundColor: AppColors.surfaceDark,
+        selectedItemColor: AppColors.accent,
+        unselectedItemColor: AppColors.textSecondaryDark,
+        type: BottomNavigationBarType.fixed,
+        elevation: 8,
+      ),
+
+      cardTheme: CardThemeData(
+        color: AppColors.surfaceDark,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: const BorderSide(color: AppColors.borderDark),
+        ),
+      ),
     );
   }
 }
@@ -106,10 +216,6 @@ GoRouter _createRouter(WidgetRef ref) {
 
     // ========== REDIRECTION AUTOMATIQUE ==========
     redirect: (context, state) {
-      // TEMPORAIRE : Désactivé pour tester la navigation
-      return null;
-
-      /* COMMENTÉ TEMPORAIREMENT
       // Récupérer l'état d'authentification
       final authState = ref.read(authProvider);
       final isAuthenticated = authState.isAuthenticated;
@@ -117,7 +223,6 @@ GoRouter _createRouter(WidgetRef ref) {
 
       // Pages publiques (accessibles sans connexion)
       final publicRoutes = [AppRoutes.login, AppRoutes.resetPassword];
-
       final isOnPublicRoute = publicRoutes.contains(state.matchedLocation);
 
       // Si l'app charge l'état initial, ne rien faire
@@ -137,7 +242,6 @@ GoRouter _createRouter(WidgetRef ref) {
 
       // Laisser passer
       return null;
-      */
     },
 
     // ========== RAFRAÎCHIR QUAND L'AUTH CHANGE ==========
@@ -155,14 +259,15 @@ GoRouter _createRouter(WidgetRef ref) {
       ),
 
       // ========== NAVIGATION PRINCIPALE ==========
+      // La route /home gère les 4 onglets via MainNavigationScreen
       GoRoute(
         path: AppRoutes.home,
-        builder: (context, state) => const MainNavigationScreen(),
+        builder: (context, state) => const MainNavigationScreen(initialTab: 0),
       ),
 
-      // ========== PRATIQUE ==========
+      // ========== PRATIQUE (écran dédié, hors bottom nav) ==========
       GoRoute(
-        path: '/practice',
+        path: AppRoutes.practice,
         builder: (context, state) {
           final extra = state.extra as Map<String, dynamic>?;
           final challengeTitle =
@@ -179,23 +284,29 @@ GoRouter _createRouter(WidgetRef ref) {
         builder: (context, state) => const ReviewSessionScreen(),
       ),
 
-      // ========== PROGRÈS ==========
+      // ========== COMMUNITY (Communauté) ==========
       GoRoute(
-        path: '/progress',
-        builder: (context, state) => const MainNavigationScreen(),
+        path: AppRoutes.feed,
+        builder: (context, state) => const CommunityFeedScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.publish,
+        builder: (context, state) => const PublishScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.comments,
+        builder: (context, state) => const CommentsScreen(),
       ),
 
-      // ========== PROFIL ==========
+      // ========== PROFILE & SETTINGS ==========
       GoRoute(
-        path: AppRoutes.profile,
-        builder: (context, state) => const MainNavigationScreen(),
+        path: AppRoutes.leaderboard,
+        builder: (context, state) => const LeaderboardScreen(),
       ),
-
-      // TODO: Ajouter les autres routes
-      // GoRoute(
-      //   path: AppRoutes.feed,
-      //   builder: (context, state) => const CommunityFeedScreen(),
-      // ),
+      GoRoute(
+        path: AppRoutes.settings,
+        builder: (context, state) => const SettingsScreen(),
+      ),
     ],
 
     // ========== PAGE D'ERREUR ==========

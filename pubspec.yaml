@@ -59,12 +59,14 @@ dependencies:
   uuid: ^4.5.2                # Génération d'identifiants uniques
   flutter_secure_storage: ^9.2.4  # Stockage sécurisé des tokens
   intl: ^0.19.0               # Formatage dates/nombres
+  flutter_dotenv: ^5.2.1      # Variables d'environnement (.env)
   
   # UI
   shimmer: ^3.0.0             # Effet de chargement
   cached_network_image: ^3.4.1  # Cache des images du réseau
   iconify_flutter: ^0.0.5     # Icônes vectorielles (Google, etc.)
   supabase: ^2.10.0
+  flutter_animate: ^4.5.2
 
 dev_dependencies:
   flutter_test:
@@ -94,6 +96,7 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
+    - .env
     - assets/images/
     - assets/icons/
     - assets/ambiance_sounds/
@@ -104,4 +107,15 @@ flutter:
   # For details regarding adding assets from package dependencies, see
   # https://flutter.dev/to/asset-from-package
 
- 
+  # Police Inter (Google Fonts)
+  fonts:
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Inter-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Inter-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Inter-Bold.ttf
+          weight: 700

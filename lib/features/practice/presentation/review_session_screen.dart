@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../providers/review_session_provider.dart';
 import '../providers/recording_provider.dart';
+import '../../../common/constants/app_colors.dart';
+import '../../../common/widgets/glass_card.dart';
+import '../../../common/widgets/gradient_button.dart';
 
 /// Écran 4 : Revue de la Session d'Enregistrement
 /// Affiche les statistiques et permet d'écouter l'enregistrement
@@ -39,10 +43,19 @@ class _ReviewSessionScreenState extends ConsumerState<ReviewSessionScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark
-          ? const Color(0xFF101622)
-          : const Color(0xFFF6F6F8),
-      body: SafeArea(
+      backgroundColor: AppColors.backgroundDark,
+      body: Stack(
+        children: [
+          // Background Gradient (Ambiance)
+          Positioned(
+            top: 100, left: -100,
+            child: Container(
+              width: 300, height: 300,
+              decoration: BoxDecoration(shape: BoxShape.circle, color: AppColors.primary.withOpacity(0.15)),
+            ),
+          ).animate(onPlay: (c) => c.repeat(reverse: true)).scaleXY(begin: 1.0, end: 1.2, duration: 4.seconds),
+          
+          SafeArea(
         child: Column(
           children: [
             // TopAppBar
@@ -74,9 +87,11 @@ class _ReviewSessionScreenState extends ConsumerState<ReviewSessionScreen> {
             ),
 
             // Boutons d'action en bas
-            _buildActionButtons(context, isDark),
+            _buildActionButtons(context, isDark).animate().slideY(begin: 1.0, end: 0, duration: 500.ms, curve: Curves.easeOutCubic),
           ],
         ),
+      ),
+      ],
       ),
     );
   }
@@ -291,109 +306,46 @@ class _ReviewSessionScreenState extends ConsumerState<ReviewSessionScreen> {
         // Titre
         Padding(
           padding: const EdgeInsets.only(top: 20, bottom: 8),
-          child: Text(
+          child: const Text(
             'Vos Statistiques',
-            style: TextStyle(
-              color: isDark ? Colors.white : const Color(0xFF212529),
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
           ),
         ),
 
         // Carte des statistiques
-        Container(
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF101622) : Colors.white,
-            borderRadius: BorderRadius.circular(12),
-          ),
+        GlassCard(
           padding: const EdgeInsets.all(16),
           child: Column(
             children: [
-              _buildStatItem(
-                icon: Icons.timer,
-                label: 'Durée',
-                value: state.stats!.formattedDuration,
-                isDark: isDark,
-                isLast: false,
-              ),
-              _buildStatItem(
-                icon: Icons.speed,
-                label: 'Mots/Min',
-                value: state.stats!.wordsPerMinute.toString(),
-                isDark: isDark,
-                isLast: false,
-              ),
-              _buildStatItem(
-                icon: Icons.backspace,
-                label: 'Mots de remplissage',
-                value: state.stats!.fillerCount.toString(),
-                isDark: isDark,
-                isLast: false,
-              ),
-              _buildStatItem(
-                icon: Icons.pause_circle,
-                label: 'Pauses Longues',
-                value: state.stats!.pauseCount.toString(),
-                isDark: isDark,
-                isLast: true,
-              ),
+              _buildStatItem(icon: Icons.timer, label: 'Durée', value: state.stats!.formattedDuration, isLast: false),
+              _buildStatItem(icon: Icons.speed, label: 'Mots/Min', value: state.stats!.wordsPerMinute.toString(), isLast: false),
+              _buildStatItem(icon: Icons.backspace, label: 'Mots de remplissage', value: state.stats!.fillerCount.toString(), isLast: false),
+              _buildStatItem(icon: Icons.pause_circle, label: 'Pauses Longues', value: state.stats!.pauseCount.toString(), isLast: true),
             ],
           ),
-        ),
+        ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.1, end: 0),
       ],
     );
   }
 
   /// Item individuel de statistique
-  Widget _buildStatItem({
-    required IconData icon,
-    required String label,
-    required String value,
-    required bool isDark,
-    required bool isLast,
-  }) {
+  Widget _buildStatItem({required IconData icon, required String label, required String value, required bool isLast}) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12),
       decoration: BoxDecoration(
-        border: isLast
-            ? null
-            : Border(
-                bottom: BorderSide(
-                  color: isDark ? Colors.grey.shade800 : Colors.grey.shade200,
-                  width: 1,
-                ),
-              ),
+        border: isLast ? null : const Border(bottom: BorderSide(color: Colors.white10, width: 1)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Icône + Label
           Row(
             children: [
-              Icon(icon, color: const Color(0xFF1152D4), size: 20),
+              Icon(icon, color: AppColors.accent, size: 20),
               const SizedBox(width: 12),
-              Text(
-                label,
-                style: TextStyle(
-                  color: isDark
-                      ? Colors.grey.shade400
-                      : const Color(0xFF6C757D),
-                  fontSize: 14,
-                ),
-              ),
+              Text(label, style: const TextStyle(color: Colors.white70, fontSize: 14)),
             ],
           ),
-
-          // Valeur
-          Text(
-            value,
-            style: TextStyle(
-              color: isDark ? Colors.white : const Color(0xFF212529),
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+          Text(value, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
         ],
       ),
     );
@@ -405,125 +357,75 @@ class _ReviewSessionScreenState extends ConsumerState<ReviewSessionScreen> {
 
     return Container(
       margin: const EdgeInsets.only(top: 16),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Color(0xFF1152D4).withValues(alpha: isDark ? 0.2 : 0.1),
-        borderRadius: BorderRadius.circular(12),
+        color: AppColors.accent.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.accent.withOpacity(0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Icône + Label
-          Row(
+          const Row(
             children: [
-              const Icon(Icons.lightbulb, color: Color(0xFF1152D4), size: 20),
-              const SizedBox(width: 8),
-              Text(
-                'Conseil du Jour',
-                style: TextStyle(
-                  color: const Color(0xFF1152D4),
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              Icon(Icons.lightbulb, color: Colors.orangeAccent, size: 20),
+              SizedBox(width: 8),
+              Text('Conseil du Jour', style: TextStyle(color: Colors.orangeAccent, fontSize: 14, fontWeight: FontWeight.bold)),
             ],
           ),
-
+          const SizedBox(height: 12),
+          Text(state.advice!.title, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
-
-          // Titre du conseil
-          Text(
-            state.advice!.title,
-            style: TextStyle(
-              color: isDark ? Colors.white : const Color(0xFF212529),
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-
-          const SizedBox(height: 4),
-
-          // Description du conseil
-          Text(
-            state.advice!.description,
-            style: TextStyle(
-              color: isDark ? Colors.grey.shade300 : const Color(0xFF6C757D),
-              fontSize: 14,
-              height: 1.5,
-            ),
-          ),
+          Text(state.advice!.description, style: const TextStyle(color: Colors.white70, fontSize: 14, height: 1.5)),
         ],
       ),
-    );
+    ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.1, end: 0);
   }
 
   /// Boutons d'action en bas (sticky)
   Widget _buildActionButtons(BuildContext context, bool isDark) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF101622) : const Color(0xFFF6F6F8),
-        border: Border(
-          top: BorderSide(
-            color: isDark ? Colors.grey.shade800 : Colors.grey.shade200,
-            width: 1,
-          ),
-        ),
+        color: AppColors.surfaceDark.withOpacity(0.9),
+        border: const Border(top: BorderSide(color: Colors.white10, width: 1)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Bouton "Sauvegarder dans le Journal"
+          GradientButton(
+            text: 'Publier dans la Communauté',
+            icon: Icons.rocket_launch,
+            onPressed: () {
+              context.push('/publish');
+            },
+          ),
+          const SizedBox(height: 16),
           SizedBox(
             width: double.infinity,
-            height: 48,
-            child: ElevatedButton(
+            height: 56,
+            child: OutlinedButton(
               onPressed: () {
-                // TODO: Sauvegarder dans le journal (table sessions)
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text('Session sauvegardée dans votre journal !'),
+                    content: Row(
+                      children: [
+                        Icon(Icons.check_circle, color: Colors.white),
+                        SizedBox(width: 8),
+                        Text('Session sauvegardée dans votre journal !', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+                    backgroundColor: Colors.green,
+                    behavior: SnackBarBehavior.floating,
                   ),
                 );
+                context.go('/home');
               },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFF1152D4).withValues(alpha: 0.2),
-                foregroundColor: const Color(0xFF1152D4),
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
+              style: OutlinedButton.styleFrom(
+                side: BorderSide(color: AppColors.accent.withOpacity(0.5), width: 1.5),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               ),
-              child: const Text(
-                'Sauvegarder dans le Journal',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 12),
-
-          // Bouton "Publier dans la Communauté"
-          SizedBox(
-            width: double.infinity,
-            height: 48,
-            child: ElevatedButton(
-              onPressed: () {
-                // TODO: Navigation vers l'écran de publication
-                context.go('/publish');
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF1152D4),
-                foregroundColor: Colors.white,
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: const Text(
-                'Publier dans la Communauté',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
+              child: const Text('Sauvegarder dans le Journal', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
             ),
           ),
         ],

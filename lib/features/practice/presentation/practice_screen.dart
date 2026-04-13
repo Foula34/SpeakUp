@@ -1,10 +1,13 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../providers/recording_provider.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
-/// Écran d'enregistrement (Écran 3 du cahier des charges)
-/// Permet d'enregistrer sa voix avec un timer et des ambiances
+import '../providers/recording_provider.dart';
+import '../../../common/constants/app_colors.dart';
+
+/// Écran d'enregistrement Premium (Caméra Pro UI)
 class PracticeScreen extends ConsumerWidget {
   final String challengeTitle;
 
@@ -12,96 +15,172 @@ class PracticeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Récupérer l'état depuis le provider
     final recordingState = ref.watch(recordingProvider);
     final recordingNotifier = ref.read(recordingProvider.notifier);
 
     return Scaffold(
-      backgroundColor: Colors.grey[100],
-
-      // Barre du haut
-      appBar: AppBar(
-        backgroundColor: Colors.grey[100],
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => context.go('/home'),
-        ),
-        title: const Text(
-          'Enregistrement',
-          style: TextStyle(
-            color: Colors.black,
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
+      backgroundColor: Colors.black,
+      body: Stack(
+        children: [
+          // Simulated Camera View (Gradient/Blur background for MVP)
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.black, AppColors.primary.withOpacity(0.3)],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
+              ),
+            ),
           ),
-        ),
-        actions: [
+          
+          SafeArea(
+            child: Column(
+              children: [
+                _buildTopBar(context, challengeTitle),
+                
+                const Spacer(),
+                
+                // Timer
+                _buildTimer(recordingState).animate(target: recordingState.isRecording ? 1 : 0)
+                  .fadeIn(duration: 300.ms).scale(begin: const Offset(0.8, 0.8), end: const Offset(1, 1)),
+                
+                const SizedBox(height: 40),
+                
+                // Bottom Controls Area (Glassmorphism Overlay)
+                _buildBottomControls(context, recordingState, recordingNotifier),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTopBar(BuildContext context, String title) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        children: [
           IconButton(
-            icon: const Icon(Icons.more_vert, color: Colors.black),
+            icon: const Icon(Icons.close, color: Colors.white, size: 28),
+            onPressed: () => context.go('/home'),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              title,
+              style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+              maxLines: 1, overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.flip_camera_ios_outlined, color: Colors.white, size: 24),
             onPressed: () {
-              // Menu d'options (à implémenter plus tard)
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Mock: Caméra retournée'), duration: Duration(seconds: 1)));
             },
           ),
         ],
       ),
+    );
+  }
 
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
+  Widget _buildTimer(RecordingState state) {
+    String formatDuration(int seconds) {
+      final minutes = seconds ~/ 60;
+      final secs = seconds % 60;
+      return '${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.black.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(30),
+        border: Border.all(color: state.isRecording ? AppColors.recordButton : Colors.white24),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (state.isRecording)
+            Container(
+              width: 12, height: 12,
+              margin: const EdgeInsets.only(right: 12),
+              decoration: const BoxDecoration(color: AppColors.recordButton, shape: BoxShape.circle),
+            ).animate(onPlay: (c) => c.repeat()).fadeOut(duration: 1.seconds),
+          Text(
+            '${formatDuration(state.currentDuration)} / ${formatDuration(state.maxDuration)}',
+            style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: 2),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBottomControls(BuildContext context, RecordingState state, RecordingNotifier notifier) {
+    return ClipRRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.fromLTRB(20, 30, 20, 50),
+          decoration: BoxDecoration(
+            color: Colors.black.withOpacity(0.4),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(40)),
+            border: const Border(top: BorderSide(color: Colors.white10)),
+          ),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              const SizedBox(height: 20),
-
-              // Titre du défi
-              Text(
-                challengeTitle,
-                style: const TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
-                textAlign: TextAlign.center,
-              ),
-
-              const SizedBox(height: 40),
-
-              // Timer (affichage du temps)
-              _buildTimer(recordingState),
-
-              const SizedBox(height: 60),
-
-              // Section Durée
-              const Text(
-                'Durée',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black87,
+              // Settings rows (Duration & Ambiance) faded out while recording
+              AnimatedOpacity(
+                duration: const Duration(milliseconds: 300),
+                opacity: state.isRecording ? 0.3 : 1.0,
+                child: Column(
+                  children: [
+                    _buildSettingsRow(
+                      icon: Icons.timer_outlined,
+                      options: [
+                        _buildOptionButton('30s', state.maxDuration == 30, () => notifier.setDuration(30), state.isRecording),
+                        _buildOptionButton('1 min', state.maxDuration == 60, () => notifier.setDuration(60), state.isRecording),
+                        _buildOptionButton('2 min', state.maxDuration == 120, () => notifier.setDuration(120), state.isRecording),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    _buildSettingsRow(
+                      icon: Icons.surround_sound_outlined,
+                      options: [
+                        _buildOptionButton('Silence', state.selectedAmbiance == 'Silencieux', () => notifier.setAmbiance('Silencieux'), state.isRecording),
+                        _buildOptionButton('Salle', state.selectedAmbiance == 'Salle', () => notifier.setAmbiance('Salle'), state.isRecording),
+                        _buildOptionButton('Public', state.selectedAmbiance == 'Auditorium', () => notifier.setAmbiance('Auditorium'), state.isRecording),
+                      ],
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 16),
-              _buildDurationSelector(recordingState, recordingNotifier),
-
               const SizedBox(height: 40),
-
-              // Section Ambiance
-              const Text(
-                'Ambiance',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black87,
-                ),
+              
+              // REC Button Row
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  // Gallery
+                  GestureDetector(
+                    onTap: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Mock: Galerie ouverte'), duration: Duration(seconds: 1))),
+                    child: const CircleAvatar(backgroundColor: Colors.white10, radius: 24, child: Icon(Icons.photo_library_outlined, color: Colors.white)),
+                  ),
+                  
+                  // Main REC
+                  _buildRecordButton(state, notifier, context),
+                  
+                  // Filters/Effects
+                  GestureDetector(
+                    onTap: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Mock: Filtres affichés'), duration: Duration(seconds: 1))),
+                    child: const CircleAvatar(backgroundColor: Colors.white10, radius: 24, child: Icon(Icons.auto_awesome, color: Colors.white)),
+                  ),
+                ],
               ),
-              const SizedBox(height: 16),
-              _buildAmbianceSelector(recordingState, recordingNotifier),
-
-              const SizedBox(height: 60),
-
-              // Gros bouton REC
-              _buildRecordButton(recordingState, recordingNotifier, context),
-
-              const SizedBox(height: 40),
             ],
           ),
         ),
@@ -109,74 +188,35 @@ class PracticeScreen extends ConsumerWidget {
     );
   }
 
-  /// Widget qui affiche le timer (00:00 / 02:00)
-  Widget _buildTimer(RecordingState state) {
-    // Convertir les secondes en format MM:SS
-    String formatDuration(int seconds) {
-      final minutes = seconds ~/ 60;
-      final secs = seconds % 60;
-      return '${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
-    }
-
-    return FittedBox(
-      fit: BoxFit.scaleDown,
-      child: Text(
-        '${formatDuration(state.currentDuration)} / ${formatDuration(state.maxDuration)}',
-        style: const TextStyle(
-          fontSize: 48,
-          fontWeight: FontWeight.bold,
-          color: Colors.black,
-          letterSpacing: 1,
-        ),
-      ),
-    );
-  }
-
-  /// Widget qui affiche les boutons de durée (30s, 1min, 2min)
-  Widget _buildDurationSelector(
-    RecordingState state,
-    RecordingNotifier notifier,
-  ) {
+  Widget _buildSettingsRow({required IconData icon, required List<Widget> options}) {
     return Row(
       children: [
-        _buildDurationButton('30s', 30, state, notifier),
-        const SizedBox(width: 12),
-        _buildDurationButton('1 min', 60, state, notifier),
-        const SizedBox(width: 12),
-        _buildDurationButton('2 min', 120, state, notifier),
+        Icon(icon, color: Colors.white54, size: 24),
+        const SizedBox(width: 16),
+        Expanded(child: Row(children: options)),
       ],
     );
   }
 
-  /// Bouton individuel de durée
-  Widget _buildDurationButton(
-    String label,
-    int seconds,
-    RecordingState state,
-    RecordingNotifier notifier,
-  ) {
-    final isSelected = state.maxDuration == seconds;
-    final isDisabled = state.isRecording;
-
+  Widget _buildOptionButton(String label, bool isSelected, VoidCallback onTap, bool isDisabled) {
     return Expanded(
       child: GestureDetector(
-        onTap: isDisabled ? null : () => notifier.setDuration(seconds),
+        onTap: isDisabled ? null : onTap,
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 16),
+          margin: const EdgeInsets.symmetric(horizontal: 4),
+          padding: const EdgeInsets.symmetric(vertical: 10),
           decoration: BoxDecoration(
-            color: isSelected ? Colors.white : Colors.grey[300],
-            borderRadius: BorderRadius.circular(12),
-            border: isSelected
-                ? Border.all(color: Colors.blue, width: 2)
-                : null,
+            color: isSelected ? Colors.white : Colors.transparent,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: isSelected ? Colors.transparent : Colors.white24),
           ),
           child: Text(
             label,
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 16,
-              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-              color: isDisabled ? Colors.grey : Colors.black87,
+              fontSize: 14,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+              color: isSelected ? Colors.black : Colors.white,
             ),
           ),
         ),
@@ -184,109 +224,44 @@ class PracticeScreen extends ConsumerWidget {
     );
   }
 
-  /// Widget qui affiche les boutons d'ambiance
-  Widget _buildAmbianceSelector(
-    RecordingState state,
-    RecordingNotifier notifier,
-  ) {
-    return Row(
-      children: [
-        _buildAmbianceButton('Silencieux', state, notifier),
-        const SizedBox(width: 12),
-        _buildAmbianceButton('Salle', state, notifier),
-        const SizedBox(width: 12),
-        _buildAmbianceButton('Auditorium', state, notifier),
-      ],
-    );
-  }
-
-  /// Bouton individuel d'ambiance
-  Widget _buildAmbianceButton(
-    String label,
-    RecordingState state,
-    RecordingNotifier notifier,
-  ) {
-    final isSelected = state.selectedAmbiance == label;
-    final isDisabled = state.isRecording;
-
-    return Expanded(
-      child: GestureDetector(
-        onTap: isDisabled ? null : () => notifier.setAmbiance(label),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          decoration: BoxDecoration(
-            color: isSelected ? Colors.white : Colors.grey[300],
-            borderRadius: BorderRadius.circular(12),
-            border: isSelected
-                ? Border.all(color: Colors.blue, width: 2)
-                : null,
-          ),
-          child: Text(
-            label,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-              color: isDisabled ? Colors.grey : Colors.black87,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// Le gros bouton REC/STOP en bas
-  Widget _buildRecordButton(
-    RecordingState state,
-    RecordingNotifier notifier,
-    BuildContext context,
-  ) {
+  Widget _buildRecordButton(RecordingState state, RecordingNotifier notifier, BuildContext context) {
     return GestureDetector(
       onTap: () async {
         await notifier.toggleRecording(challengeTitle);
-
-        // Si l'enregistrement vient de s'arrêter, aller à l'écran de revue
         if (!state.isRecording && state.recordingPath != null) {
-          // Attendre un peu pour que l'état se mette à jour
           Future.delayed(const Duration(milliseconds: 500), () {
             if (context.mounted) {
-              context.push(
-                '/review',
-                extra: {
-                  'recordingPath': state.recordingPath,
-                  'challengeTitle': challengeTitle,
-                  'duration': state.currentDuration,
-                },
-              );
+              context.push('/review', extra: {'recordingPath': state.recordingPath, 'challengeTitle': challengeTitle, 'duration': state.currentDuration});
             }
           });
         }
       },
-      child: Container(
-        width: 140,
-        height: 140,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: state.isRecording ? Colors.grey[700] : Colors.red,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.2),
-              blurRadius: 20,
-              offset: const Offset(0, 10),
-            ),
-          ],
-        ),
-        child: Center(
-          child: Text(
-            state.isRecording ? 'STOP' : 'REC',
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 2,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // Pulse Ring Effect
+          if (state.isRecording)
+            Container(
+              width: 110, height: 110,
+              decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: AppColors.recordButton, width: 2)),
+            ).animate(onPlay: (c) => c.repeat()).scaleXY(begin: 1.0, end: 1.5).fadeOut(duration: 1.seconds),
+
+          // Outer Ring
+          Container(
+            width: 86, height: 86,
+            decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 4)),
+            child: Center(
+              // Inner REC shape
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeOutBack,
+                width: state.isRecording ? 36 : 70,
+                height: state.isRecording ? 36 : 70,
+                decoration: BoxDecoration(color: AppColors.recordButton, borderRadius: BorderRadius.circular(state.isRecording ? 10 : 35)),
+              ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }

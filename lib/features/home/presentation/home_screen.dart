@@ -1,45 +1,112 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'dart:math' as Math;
 
-/// Écran d'accueil principal de l'application SpeakUp
-/// Affiche : AppBar avec profil, Défi du jour, Tendances communautaires
-class HomeScreen extends ConsumerWidget {
+import '../../../common/constants/app_colors.dart';
+import '../../../common/widgets/glass_card.dart';
+import '../../../common/widgets/gradient_button.dart';
+
+/// Écran d'accueil principal de l'application SpeakUp (Version Premium)
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    // TODO: Récupérer le niveau de l'utilisateur depuis le provider
-    final userLevel = 2; // Temporaire - sera dynamique plus tard
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  void _showNotifications(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.backgroundDark,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Notifications (Mock)', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 24),
+              ListTile(
+                leading: CircleAvatar(backgroundColor: AppColors.accent.withOpacity(0.2), child: const Icon(Icons.thumb_up, color: AppColors.accent, size: 20)),
+                title: const Text('Amadou a aimé votre pitch', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                subtitle: const Text('Il y a 2h', style: TextStyle(color: Colors.white54)),
+              ),
+              ListTile(
+                leading: CircleAvatar(backgroundColor: Colors.orangeAccent.withOpacity(0.2), child: const Icon(Icons.emoji_events, color: Colors.orangeAccent, size: 20)),
+                title: const Text('Badge "Premier Pas" débloqué !', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                subtitle: const Text('Hier', style: TextStyle(color: Colors.white54)),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final userLevel = 2; // Temporaire
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5), // Gris très clair
-      body: SafeArea(
-        child: CustomScrollView(
-          slivers: [
-            // AppBar personnalisée
-            _buildAppBar(context, userLevel),
-            
-            // Contenu principal
-            SliverToBoxAdapter(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 16),
-                  
-                  // Carte "Défi du Jour"
-                  _buildDailyChallenge(context),
-                  
-                  const SizedBox(height: 32),
-                  
-                  // Section "Tendances Communautaires"
-                  _buildCommunityTrends(context),
-                ],
+      backgroundColor: AppColors.backgroundDark,
+      body: Stack(
+        children: [
+          // Background Gradient Orbs (Ambiance)
+          Positioned(
+            top: -100,
+            left: -100,
+            child: Container(
+              width: 300,
+              height: 300,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.primary.withOpacity(0.3),
               ),
             ),
-          ],
-        ),
+          ).animate(onPlay: (controller) => controller.repeat(reverse: true))
+           .scaleXY(begin: 1.0, end: 1.2, curve: Curves.easeInOut, duration: 4.seconds),
+           
+          Positioned(
+            top: 200,
+            right: -150,
+            child: Container(
+              width: 400,
+              height: 400,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.accent.withOpacity(0.15),
+              ),
+            ),
+          ).animate(onPlay: (controller) => controller.repeat(reverse: true))
+           .scaleXY(begin: 1.2, end: 1.0, curve: Curves.easeInOut, duration: 5.seconds),
+
+          // Main Content
+          SafeArea(
+            child: CustomScrollView(
+              physics: const BouncingScrollPhysics(),
+              slivers: [
+                _buildAppBar(context, userLevel),
+                SliverToBoxAdapter(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 24),
+                      _buildDailyChallenge(context),
+                      const SizedBox(height: 48),
+                      _buildCommunityTrends(context),
+                      const SizedBox(height: 100), // Padding pour BottomNavBar
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -48,175 +115,145 @@ class HomeScreen extends ConsumerWidget {
   Widget _buildAppBar(BuildContext context, int userLevel) {
     return SliverAppBar(
       floating: true,
-      backgroundColor: const Color(0xFFF5F5F5),
+      backgroundColor: Colors.transparent,
       elevation: 0,
-      title: Row(
-        children: [
-          // Avatar à gauche
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: const Color(0xFFE8D5C4), // Beige
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.person_outline,
-              color: Color(0xFF8B7355),
-              size: 28,
-            ),
-          ),
-          
-          const Spacer(),
-          
-          // Titre "SpeakUp" au centre
-          const Text(
-            'SpeakUp',
-            style: TextStyle(
-              color: Colors.black,
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          
-          const Spacer(),
-          
-          // Icône de notification à droite
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: Colors.transparent,
-              shape: BoxShape.circle,
-            ),
-            child: IconButton(
-              icon: const Icon(Icons.notifications_outlined),
-              color: Colors.black,
-              onPressed: () {
-                // TODO: Naviguer vers les notifications
-              },
-            ),
-          ),
-        ],
-      ),
-      bottom: PreferredSize(
-        preferredSize: const Size.fromHeight(40),
-        child: Padding(
-          padding: const EdgeInsets.only(left: 16, bottom: 12),
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
-              'Niveau $userLevel',
-              style: const TextStyle(
-                color: Color(0xFF6B7280), // Gris moyen
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-  /// Carte "Défi du Jour"
-  Widget _buildDailyChallenge(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+      toolbarHeight: 90,
+      title: Padding(
+        padding: const EdgeInsets.only(top: 8.0),
+        child: Row(
           children: [
-            // Image décorative avec courbes
+            // Avatar
             Container(
-              height: 200,
+              width: 52,
+              height: 52,
               decoration: BoxDecoration(
-                color: const Color(0xFFE8D5C4), // Beige clair
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(20),
-                  topRight: Radius.circular(20),
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  colors: [AppColors.accent, AppColors.primary],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
+                boxShadow: [
+                  BoxShadow(color: AppColors.accent.withOpacity(0.4), blurRadius: 12, offset: const Offset(0, 4)),
+                ],
               ),
-              child: Stack(
+              child: const Center(
+                child: Text('J', style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
+              ),
+            ),
+            const SizedBox(width: 16),
+            
+            // Text Greet
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Image des courbes (pour l'instant, on simule avec des Container)
-                  // TODO: Remplacer par une vraie image plus tard
-                  Positioned.fill(
-                    child: CustomPaint(
-                      painter: WavePainter(),
+                  Text(
+                    'Bonjour, Jeanne',
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.9),
+                      fontSize: 14,
+                    ),
+                  ),
+                  const Text(
+                    'Prête à briller ? ✨',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ],
               ),
             ),
             
-            // Contenu texte
+            // Notifications
+            GestureDetector(
+              onTap: () => _showNotifications(context),
+              child: const GlassCard(
+                padding: EdgeInsets.all(10),
+                borderRadius: 16,
+                width: 48,
+                height: 48,
+                child: Icon(Icons.notifications_outlined, color: Colors.white, size: 24),
+              ),
+            ),
+          ],
+        ),
+      ),
+    ).animate().fadeIn(duration: 400.ms).slideY(begin: -0.2, end: 0);
+  }
+
+  /// Carte "Défi du Jour" Premium
+  Widget _buildDailyChallenge(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: GlassCard(
+        padding: EdgeInsets.zero,
+        borderRadius: 28,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Header Art
+            Stack(
+              children: [
+                Container(
+                  height: 180,
+                  decoration: BoxDecoration(
+                    borderRadius: const BorderRadius.only(topLeft: Radius.circular(28), topRight: Radius.circular(28)),
+                    gradient: LinearGradient(
+                      colors: [AppColors.primary, const Color(0xFF1E3A8A)],
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                    ),
+                  ),
+                  child: CustomPaint(painter: WavePainter()),
+                ),
+                Positioned(
+                  top: 20,
+                  right: 20,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.white.withOpacity(0.3)),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.local_fire_department, color: Colors.orangeAccent, size: 16),
+                        SizedBox(width: 4),
+                        Text('Nouveau', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            
+            // Body
             Padding(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(24),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Défi du Jour: Maîtriser le Storytelling',
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
-                    ),
+                    'Le Pouvoir du Storytelling',
+                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: -0.5),
                   ),
-                  
-                  const SizedBox(height: 8),
-                  
-                  const Text(
-                    'Exercez-vous à raconter une histoire captivante en moins de 2 minutes.',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Color(0xFF6B7280),
-                      height: 1.4,
-                    ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Captez l\'attention en structurant votre pitch comme une histoire (2 min).',
+                    style: TextStyle(fontSize: 15, color: Colors.white.withOpacity(0.7), height: 1.5),
                   ),
-                  
-                  const SizedBox(height: 20),
-                  // Bouton "Commencer la Pratique"
-                  SizedBox(
-                    width: double.infinity,
-                    height: 56,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        // Navigation vers l'écran de pratique avec le titre du défi
-                        context.push(
-                          '/practice',
-                          extra: {
-                            'challengeTitle': 'Parlez d\'un moment qui a changé votre vie',
-                          },
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF2563EB), // Bleu
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        elevation: 0,
-                      ),
-                      child: const Text(
-                        'Commencer la Pratique 🚀',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
+                  const SizedBox(height: 32),
+                  GradientButton(
+                    text: 'Commencer la Pratique',
+                    icon: Icons.play_arrow_rounded,
+                    onPressed: () {
+                      context.push('/practice', extra: {'challengeTitle': 'Maîtriser le Storytelling'});
+                    },
                   ),
                 ],
               ),
@@ -224,55 +261,42 @@ class HomeScreen extends ConsumerWidget {
           ],
         ),
       ),
-    );
+    ).animate().fadeIn(delay: 200.ms, duration: 500.ms).slideY(begin: 0.1, end: 0);
   }
 
   /// Section "Tendances Communautaires"
   Widget _buildCommunityTrends(BuildContext context) {
-    // Données factices pour le MVP
     final trendingPosts = [
-      {
-        'title': 'L\'Avenir de l\'IA',
-        'author': 'Alex Dupont',
-        'duration': '3 min',
-        'color': const Color(0xFF6366F1), // Bleu-violet
-      },
-      {
-        'title': 'Mon Voyage Entrepreneurial',
-        'author': 'Marie Curie',
-        'duration': '2 min',
-        'color': const Color(0xFF059669), // Vert
-      },
-      {
-        'title': 'Changer le Monde',
-        'author': 'Jean Martin',
-        'duration': '4 min',
-        'color': const Color(0xFFDC2626), // Rouge
-      },
+      {'title': 'Convaincre un investisseur en 30s', 'author': 'Amadou B.', 'duration': '3 min', 'color': const Color(0xFF6366F1), 'icon': Icons.rocket_launch},
+      {'title': 'Mon retour sur l\'IA et le design', 'author': 'Fatou N.', 'duration': '2 min', 'color': const Color(0xFF10B981), 'icon': Icons.palette},
+      {'title': 'Comment structurer son argumentaire', 'author': 'Moussa K.', 'duration': '4 min', 'color': const Color(0xFFF43F5E), 'icon': Icons.psychology},
     ];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16),
-          child: Text(
-            'Tendances Communautaires',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.black,
-            ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Top Tendances',
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
+              ),
+              Text(
+                'Voir tout',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.accent),
+              ),
+            ],
           ),
         ),
-        
-        const SizedBox(height: 16),
-        
-        // Liste horizontale scrollable des posts
+        const SizedBox(height: 20),
         SizedBox(
-          height: 220,
+          height: 240,
           child: ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            physics: const BouncingScrollPhysics(),
             scrollDirection: Axis.horizontal,
             itemCount: trendingPosts.length,
             itemBuilder: (context, index) {
@@ -283,115 +307,49 @@ class HomeScreen extends ConsumerWidget {
                 author: post['author'] as String,
                 duration: post['duration'] as String,
                 color: post['color'] as Color,
-              );
+                icon: post['icon'] as IconData,
+              ).animate().fadeIn(delay: (300 + (index * 100)).ms).slideX(begin: 0.2, end: 0);
             },
           ),
         ),
-        
-        const SizedBox(height: 24),
       ],
     );
   }
 
-  /// Carte individuelle de tendance
-  Widget _buildTrendingCard(
-    BuildContext context, {
-    required String title,
-    required String author,
-    required String duration,
-    required Color color,
-  }) {
+  Widget _buildTrendingCard(BuildContext context, {required String title, required String author, required String duration, required Color color, required IconData icon}) {
     return Container(
       width: 280,
-      margin: const EdgeInsets.only(right: 16),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
-        child: Stack(
+      margin: const EdgeInsets.only(right: 20),
+      child: GlassCard(
+        padding: const EdgeInsets.all(20),
+        backgroundColor: color.withOpacity(0.15),
+        borderColor: color.withOpacity(0.3),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Image de fond avec dégradé
-            Positioned.fill(
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      color.withOpacity(0.8),
-                      color,
-                    ],
-                  ),
-                ),
-                // Pattern géométrique (simplifié pour le MVP)
-                child: CustomPaint(
-                  painter: GeometricPatternPainter(color: color),
-                ),
-              ),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(color: color.withOpacity(0.2), shape: BoxShape.circle),
+              child: Icon(icon, color: color, size: 28),
             ),
-            
-            // Contenu texte
-            Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.transparent,
-                      Colors.black.withOpacity(0.7),
-                    ],
-                  ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Text(
-                          'Par $author',
-                          style: const TextStyle(
-                            fontSize: 14,
-                            color: Colors.white70,
-                          ),
-                        ),
-                        const Spacer(),
-                        Text(
-                          duration,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            color: Colors.white70,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
+            const Spacer(),
+            Text(
+              title,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white, height: 1.3),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                CircleAvatar(backgroundColor: Colors.white.withOpacity(0.2), radius: 12, child: Text(author[0], style: const TextStyle(fontSize: 10, color: Colors.white))),
+                const SizedBox(width: 8),
+                Text(author, style: TextStyle(fontSize: 14, color: Colors.white.withOpacity(0.8))),
+                const Spacer(),
+                Icon(Icons.timer_outlined, color: Colors.white.withOpacity(0.5), size: 14),
+                const SizedBox(width: 4),
+                Text(duration, style: TextStyle(fontSize: 12, color: Colors.white.withOpacity(0.5))),
+              ],
             ),
           ],
         ),
@@ -400,84 +358,31 @@ class HomeScreen extends ConsumerWidget {
   }
 }
 
-/// Painter pour dessiner les courbes ondulées de la carte "Défi du Jour"
+/// Painter Modernisé pour la Card
 class WavePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = const Color(0xFFD4B5A0).withOpacity(0.3)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.5;
-
-    // Dessiner plusieurs courbes ondulées
-    for (int i = 0; i < 8; i++) {
-      final path = Path();
-      final offsetY = size.height * 0.2 + (i * size.height * 0.1);
-      
-      path.moveTo(0, offsetY);
-      
-      for (double x = 0; x <= size.width; x += 20) {
-        final y = offsetY + 15 * Math.sin((x / size.width) * 2 * Math.pi + i * 0.5);
-        path.lineTo(x, y);
-      }
-      
-      canvas.drawPath(path, paint);
-    }
-    
-    // Ajouter quelques points
-    final dotPaint = Paint()
-      ..color = const Color(0xFF8B7355)
-      ..style = PaintingStyle.fill;
-    
-    canvas.drawCircle(Offset(size.width * 0.2, size.height * 0.4), 3, dotPaint);
-    canvas.drawCircle(Offset(size.width * 0.4, size.height * 0.5), 3, dotPaint);
-    canvas.drawCircle(Offset(size.width * 0.6, size.height * 0.45), 3, dotPaint);
-    canvas.drawCircle(Offset(size.width * 0.8, size.height * 0.35), 3, dotPaint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
-
-/// Painter pour le pattern géométrique des cartes de tendances
-class GeometricPatternPainter extends CustomPainter {
-  final Color color;
-
-  GeometricPatternPainter({required this.color});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.white.withOpacity(0.1)
+      ..color = Colors.white.withOpacity(0.05)
       ..style = PaintingStyle.fill;
 
-    // Créer un pattern de triangles
-    const gridSize = 40.0;
+    final path = Path();
+    path.moveTo(0, size.height * 0.4);
+    path.quadraticBezierTo(size.width * 0.3, size.height * 0.2, size.width * 0.6, size.height * 0.6);
+    path.quadraticBezierTo(size.width * 0.8, size.height * 0.8, size.width, size.height * 0.5);
+    path.lineTo(size.width, size.height);
+    path.lineTo(0, size.height);
+    canvas.drawPath(path, paint);
     
-    for (double x = 0; x < size.width; x += gridSize) {
-      for (double y = 0; y < size.height; y += gridSize) {
-        // Triangle vers le haut
-        final path1 = Path()
-          ..moveTo(x, y + gridSize)
-          ..lineTo(x + gridSize / 2, y)
-          ..lineTo(x + gridSize, y + gridSize)
-          ..close();
-        
-        // Triangle vers le bas
-        final path2 = Path()
-          ..moveTo(x, y)
-          ..lineTo(x + gridSize, y)
-          ..lineTo(x + gridSize / 2, y + gridSize)
-          ..close();
-        
-        // Alterner les triangles pour créer un pattern
-        if ((x / gridSize + y / gridSize) % 2 == 0) {
-          canvas.drawPath(path1, paint);
-        } else {
-          canvas.drawPath(path2, paint);
-        }
-      }
-    }
+    final paint2 = Paint()
+      ..color = AppColors.accent.withOpacity(0.2)
+      ..style = PaintingStyle.fill;
+    
+    final path2 = Path();
+    path2.moveTo(size.width * 0.2, size.height);
+    path2.quadraticBezierTo(size.width * 0.5, size.height * 0.3, size.width, size.height * 0.6);
+    path2.lineTo(size.width, size.height);
+    canvas.drawPath(path2, paint2);
   }
 
   @override
