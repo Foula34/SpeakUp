@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../constants/app_colors.dart';
+import '../constants/app_colors.dart';
 
 /// Onglet 3 : Progrès (Historique des Sessions)
 class ProgressScreen extends StatelessWidget {

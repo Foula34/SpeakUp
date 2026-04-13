@@ -90,7 +90,15 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = AuthState.loading();
 
     try {
-      final user = await _authService.signIn(email: email, password: password);
+      // TEMPORAIRE : BYPASS SUPABASE AUTH
+      // final user = await _authService.signIn(email: email, password: password);
+      
+      await Future.delayed(const Duration(milliseconds: 800)); // Simuler l'attente
+      final user = UserModel(
+        id: 'bypass-id',
+        email: email.isNotEmpty ? email : 'test@example.com',
+        name: 'Utilisateur Test',
+      );
 
       state = AuthState.authenticated(user);
     } catch (e) {
@@ -107,10 +115,18 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = AuthState.loading();
 
     try {
-      final user = await _authService.signUp(
-        email: email,
-        password: password,
-        name: name,
+      // TEMPORAIRE : BYPASS SUPABASE AUTH
+      // final user = await _authService.signUp(
+      //   email: email,
+      //   password: password,
+      //   name: name,
+      // );
+      
+      await Future.delayed(const Duration(milliseconds: 800)); // Simuler l'attente
+      final user = UserModel(
+        id: 'bypass-id',
+        email: email.isNotEmpty ? email : 'test@example.com',
+        name: name.isNotEmpty ? name : 'Utilisateur Test',
       );
 
       state = AuthState.authenticated(user);
